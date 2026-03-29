@@ -1,0 +1,64 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String      @id @default(cuid())
+  email      String      @unique
+  name       String?
+  createdAt  DateTime    @default(now())
+  eventTypes EventType[]
+}
+
+model EventType {
+  id             String          @id @default(cuid())
+  userId         String
+  user           User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  slug           String          @unique
+  duration       Int
+  description    String?
+  bufferTime     Int             @default(0)
+  customQuestions String?
+  createdAt      DateTime        @default(now())
+  availabilities Availability[]
+  dateOverrides  DateOverride[]
+  bookings       Booking[]
+}
+
+/// dayOfWeek: 0 = Sunday … 6 = Saturday (matches JS Date#getDay)
+model Availability {
+  id          String    @id @default(cuid())
+  eventTypeId String
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  dayOfWeek   Int
+  startTime   String
+  endTime     String
+}
+
+model DateOverride {
+  id          String    @id @default(cuid())
+  eventTypeId String
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  date        String    
+  startTime   String    
+  endTime     String    
+  isBlocked   Boolean   @default(false)
+}
+
+model Booking {
+  id          String    @id @default(cuid())
+  eventTypeId String
+  eventType   EventType @relation(fields: [eventTypeId], references: [id], onDelete: Cascade)
+  guestName   String
+  guestEmail  String
+  startTime   DateTime
+  endTime     DateTime
+  responses   String?   
+  createdAt   DateTime  @default(now())
+}
